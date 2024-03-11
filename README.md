@@ -2,7 +2,7 @@ Experimenting with HALMET, cusomizing for own boat.
 
 
 
-# HALMET Example Firmware
+# HALMET Firmware
 
 This repository provides example firmware for [HALMET: Hat Labs Marine Engine & Tank interface](https://shop.hatlabs.fi/products/halmet).
 
