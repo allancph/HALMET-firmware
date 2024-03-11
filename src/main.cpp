@@ -194,32 +194,49 @@ void setup() {
 
   // Connect the tank senders.
   // EDIT: To enable more tanks, uncomment the lines below.
-  auto tank_a1_volume = ConnectTankSender(ads1115, 0, "fuel");
-  // auto tank_a2_volume = ConnectTankSender(ads1115, 1, "A2");
-  // auto tank_a3_volume = ConnectTankSender(ads1115, 2, "A3");
+  auto tank_a1_volume = ConnectTankSender(ads1115, 0, "diesel");
+  auto tank_a2_volume = ConnectTankSender(ads1115, 1, "water fwd");
+  auto tank_a3_volume = ConnectTankSender(ads1115, 2, "water aft");
   // auto tank_a4_volume = ConnectTankSender(ads1115, 3, "A4");
 
 #ifdef ENABLE_NMEA2000_OUTPUT
-  // Tank 1, instance 0. Capacity 200 liters.
-  // EDIT: Make sure this matches your tank configuration above.
+
+  // Tank 1, instance 0. Fuel capacity 130 liters.
+
   N2kFluidLevelSender* tank_a1_sender = new N2kFluidLevelSender(
-      "/NMEA 2000/Tank 1", 0, N2kft_Fuel, 200, nmea2000);
+      "/NMEA 2000/Tank 1", 0, N2kft_Fuel, 130, nmea2000);
   tank_a1_volume->connect_to(&(tank_a1_sender->tank_level_consumer_));
+
+  // Total water tank capacity is 200 + 155 = 355 liters.
+
+  // Tank 2, instance 1. Capacity is assumed to be 200 liters.
+  N2kFluidLevelSender* tank_a2_sender = new N2kFluidLevelSender(
+      "/NMEA 2000/Tank 2", 1, N2kft_Water, 200, nmea2000);
+  tank_a2_volume->connect_to(&(tank_a2_sender->tank_level_consumer_));
+
+  // Tank 3, instance 2. Capacity is assumed to be 155 liters.
+  N2kFluidLevelSender* tank_a3_sender = new N2kFluidLevelSender(
+      "/NMEA 2000/Tank 3", 2, N2kft_Water, 155, nmea2000);
+  tank_a3_volume->connect_to(&(tank_a3_sender->tank_level_consumer_));
+
 #endif  // ENABLE_NMEA2000_OUTPUT
 
-  if (display_present) {
-    // EDIT: Duplicate the lines below to make the display show all your tanks.
-    tank_a1_volume->connect_to(new LambdaConsumer<float>(
-        [](float value) { PrintValue(display, 2, "Tank A1", 100 * value); }));
-  }
+if (display_present) {
+  tank_a1_volume->connect_to(new LambdaConsumer<float>(
+      [](float value) { PrintValue(display, 2, "diesel", 100 * value); }));
+  tank_a2_volume->connect_to(new LambdaConsumer<float>(
+      [](float value) { PrintValue(display, 3, "water forward", 100 * value); }));
+  tank_a3_volume->connect_to(new LambdaConsumer<float>(
+      [](float value) { PrintValue(display, 4, "water aft", 100 * value); }));
+}
 
   ///////////////////////////////////////////////////////////////////
   // Digital alarm inputs
 
   // EDIT: More alarm inputs can be defined by duplicating the lines below.
   // Make sure to not define a pin for both a tacho and an alarm.
-  auto alarm_d2_input = ConnectAlarmSender(kDigitalInputPin2, "D2");
-  auto alarm_d3_input = ConnectAlarmSender(kDigitalInputPin3, "D3");
+  auto alarm_d2_input = ConnectAlarmSender(kDigitalInputPin2, "Oil pressure");
+  auto alarm_d3_input = ConnectAlarmSender(kDigitalInputPin3, "Cooling water temperature");
   // auto alarm_d4_input = ConnectAlarmSender(kDigitalInputPin4, "D4");
 
   // Update the alarm states based on the input value changes.
@@ -255,7 +272,7 @@ void setup() {
 
   // Connect the tacho senders. Engine name is "main".
   // EDIT: More tacho inputs can be defined by duplicating the line below.
-  auto tacho_d1_frequency = ConnectTachoSender(kDigitalInputPin1, "main");
+  auto tacho_d1_frequency = ConnectTachoSender(kDigitalInputPin1, "RPM");
 
 #ifdef ENABLE_NMEA2000_OUTPUT
   // Connect outputs to the N2k senders.
