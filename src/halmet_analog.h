@@ -5,6 +5,8 @@
 
 #include "sensesp/sensors/sensor.h"
 
+#define ENABLE_SIGNALK
+
 using namespace sensesp;
 
 

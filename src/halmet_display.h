@@ -1,6 +1,8 @@
 #ifndef __SRC_HALMET_DISPLAY_H__
 #define __SRC_HALMET_DISPLAY_H__
 
+#define ENABLE_SIGNALK
+
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 

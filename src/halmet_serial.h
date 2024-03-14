@@ -1,6 +1,8 @@
 #ifndef HALMET_SRC_HALMET_SERIAL_H_
 #define HALMET_SRC_HALMET_SERIAL_H_
 
+#define ENABLE_SIGNALK
+
 #include <esp_mac.h>
 
 #include <cstdint>

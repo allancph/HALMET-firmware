@@ -14,6 +14,8 @@
 // Comment out this line to disable Signal K support. At the moment, disabling
 // Signal K support also disables all WiFi functionality.
 #define ENABLE_SIGNALK
+//  
+
 
 #include <Adafruit_ADS1X15.h>
 #include <Adafruit_GFX.h>

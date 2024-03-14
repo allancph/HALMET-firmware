@@ -5,6 +5,8 @@
 #include "sensesp/transforms/curveinterpolator.h"
 #include "sensesp/transforms/linear.h"
 
+#define ENABLE_SIGNALK
+
 // ADS1115 input hardware scale factor (input voltage vs voltage at ADS1115)
 const float kAnalogInputScale = 29. / 2.048;
 

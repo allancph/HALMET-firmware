@@ -1,6 +1,8 @@
 #ifndef HALMET_SRC_HALMET_CONST_H_
 #define HALMET_SRC_HALMET_CONST_H_
 
+#define ENABLE_SIGNALK
+
 #include <Arduino.h>
 
 namespace sensesp {

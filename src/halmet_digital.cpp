@@ -6,6 +6,8 @@
 #include "sensesp/signalk/signalk_output.h"
 #include "sensesp/transforms/frequency.h"
 
+#define ENABLE_SIGNALK
+
 using namespace sensesp;
 
 // Default RPM count scale factor, corresponds to 100 pulses per revolution.

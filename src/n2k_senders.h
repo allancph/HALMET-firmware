@@ -1,6 +1,8 @@
 #ifndef HALMET_SRC_N2K_SENDERS_H_
 #define HALMET_SRC_N2K_SENDERS_H_
 
+#define ENABLE_SIGNALK
+
 #include <N2kMessages.h>
 #include <NMEA2000.h>
 

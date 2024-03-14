@@ -1,6 +1,8 @@
 #ifndef __SRC_HALMET_DIGITAL_H__
 #define __SRC_HALMET_DIGITAL_H__
 
+#define ENABLE_SIGNALK
+
 #include "sensesp/sensors/sensor.h"
 
 using namespace sensesp;

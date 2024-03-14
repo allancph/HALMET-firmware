@@ -3,6 +3,8 @@
 
 #include <WiFi.h>
 
+#define ENABLE_SIGNALK
+
 using namespace sensesp;
 
 // OLED display width and height, in pixels

@@ -1,6 +1,8 @@
 #ifndef HALMET_SRC_RATE_LIMITER_H_
 #define HALMET_SRC_RATE_LIMITER_H_
 
+#define ENABLE_SIGNALK
+
 #include "sensesp/transforms/transform.h"
 
 namespace sensesp {

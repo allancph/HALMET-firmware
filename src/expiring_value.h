@@ -1,6 +1,8 @@
 #ifndef HALMET_SRC_EXPIRING_VALUE_H_
 #define HALMET_SRC_EXPIRING_VALUE_H_
 
+#define ENABLE_SIGNALK
+
 template <typename T>
 class ExpiringValue {
  public:
