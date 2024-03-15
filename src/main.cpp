@@ -245,10 +245,7 @@ if (display_present) {
   // EDIT: If you added more alarm inputs, uncomment the respective lines below.
   alarm_d2_input->connect_to(
       new LambdaConsumer<bool>([](bool value) { alarm_states[1] = value; }));
-  // In this example, alarm_d3_input is active low, so invert the value.
-  auto alarm_d3_inverted = alarm_d3_input->connect_to(
-      new LambdaTransform<bool, bool>([](bool value) { return !value; }));
-  alarm_d3_inverted->connect_to(
+  alarm_d3_input->connect_to(
       new LambdaConsumer<bool>([](bool value) { alarm_states[2] = value; }));
   // alarm_d4_input->connect_to(
   //     new LambdaConsumer<bool>([](bool value) { alarm_states[3] = value; }));
@@ -261,9 +258,9 @@ if (display_present) {
                                           nmea2000);
   alarm_d2_input->connect_to(
       &(engine_dynamic_sender->low_oil_pressure_consumer_));
-  // This is just an example -- normally temperature alarms would not be
-  // active-low (inverted).
-  alarm_d3_inverted->connect_to(
+  // ///////
+  // ///////
+  alarm_d3_input->connect_to(
       &(engine_dynamic_sender->over_temperature_consumer_));
 #endif  // ENABLE_NMEA2000_OUTPUT
 
