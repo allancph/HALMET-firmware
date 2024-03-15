@@ -247,7 +247,7 @@ if (display_present) {
       new LambdaConsumer<bool>([](bool value) { alarm_states[1] = value; }));
   alarm_d3_input->connect_to(
       new LambdaConsumer<bool>([](bool value) { alarm_states[2] = value; }));
-  // alarm_d4_input->connect_to(
+  //     alarm_d4_input->connect_to(
   //     new LambdaConsumer<bool>([](bool value) { alarm_states[3] = value; }));
 
 #ifdef ENABLE_NMEA2000_OUTPUT
