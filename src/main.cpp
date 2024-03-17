@@ -232,40 +232,34 @@ if (display_present) {
       [](float value) { PrintValue(display, 4, "water aft", 100 * value); }));
 }
 
-  ///////////////////////////////////////////////////////////////////
+   ///////////////////////////////////////////////////////////////////
   // Digital alarm inputs
 
   // EDIT: More alarm inputs can be defined by duplicating the lines below.
   // Make sure to not define a pin for both a tacho and an alarm.
-  auto alarm_d2_input = ConnectAlarmSender(kDigitalInputPin2, "Oil pressure");
-  auto alarm_d3_input = ConnectAlarmSender(kDigitalInputPin3, "Cooling water temperature");
-  auto alarm_d4_input = ConnectAlarmSender(kDigitalInputPin4, "Cool water test 2");
+  auto alarm_d2_input = ConnectAlarmSender(kDigitalInputPin2, "Oil pressure low");
+  // inverted auto alarm_d4_input = ConnectAlarmSender(kDigitalInputPin3, "Nothing");
+  auto alarm_d3_input = ConnectAlarmSender(kDigitalInputPin3, "Cooling water too hot");
 
   // Update the alarm states based on the input value changes.
   // EDIT: If you added more alarm inputs, uncomment the respective lines below.
+
   alarm_d2_input->connect_to(
       new LambdaConsumer<bool>([](bool value) { alarm_states[1] = value; }));
-  // In this example, alarm_d3_input is active low, so invert the value.
-  auto alarm_d3_inverted = alarm_d3_input->connect_to(
-      new LambdaTransform<bool, bool>([](bool value) { return !value; }));
-  alarm_d3_inverted->connect_to(
+  alarm_d3_input->connect_to(
       new LambdaConsumer<bool>([](bool value) { alarm_states[2] = value; }));
-  alarm_d4_input->connect_to(
-      new LambdaConsumer<bool>([](bool value) { alarm_states[3] = value; }));
-  
-
+    
 #ifdef ENABLE_NMEA2000_OUTPUT
-  // EDIT: This example connects the D2 alarm input to the low oil pressure
-  // warning. Modify according to your needs.
+
   N2kEngineParameterDynamicSender* engine_dynamic_sender =
       new N2kEngineParameterDynamicSender("/NMEA 2000/Engine 1 Dynamic", 0,
                                           nmea2000);
   alarm_d2_input->connect_to(
       &(engine_dynamic_sender->low_oil_pressure_consumer_));
-  // ///////
-  // ///////
+
   alarm_d3_input->connect_to(
       &(engine_dynamic_sender->over_temperature_consumer_));
+
 #endif  // ENABLE_NMEA2000_OUTPUT
 
   // FIXME: Transmit the alarms over SK as well.
