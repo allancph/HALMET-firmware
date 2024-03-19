@@ -25,7 +25,6 @@
 #include <NMEA2000_esp32.h>
 #endif
 
-#include "n2k_senders.h"
 #include "sensesp/net/discovery.h"
 #include "sensesp/signalk/signalk_output.h"
 #include "sensesp/sensors/analog_input.h"
@@ -34,6 +33,9 @@
 #include "sensesp/system/lambda_consumer.h"
 #include "sensesp/system/system_status_led.h"
 #include "sensesp/transforms/lambda_transform.h"
+// Temperature sensor added
+#include "sensesp_onewire/onewire_temperature.h"
+#include "sensesp/transforms/linear.h"
 
 #ifdef ENABLE_SIGNALK
 #include "sensesp_app_builder.h"
@@ -50,6 +52,7 @@
 #include "halmet_digital.h"
 #include "halmet_display.h"
 #include "halmet_serial.h"
+#include "n2k_senders.h"
 
 using namespace sensesp;
 
