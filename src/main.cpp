@@ -330,7 +330,7 @@ if (display_present) {
       new OneWireTemperature(dts, read_delay, "/coolantTemperature/oneWire");
 
   coolant_temp->connect_to(new Linear(1.0, 0.0, "/coolantTemperature/linear"))
-      ->connect_to(new SKOutputFloat("propulsion.mainEngine.coolantTemperature",
+      ->connect_to(new SKOutputFloat("propulsion.main.coolantTemperature",
                                      "/coolantTemperature/skPath"));
 
   // Measure exhaust temperature
