@@ -381,17 +381,21 @@ if (display_present) {
 
 // Get the instance of FuelInterpreter
 // Create an instance of CurveInterpolator
-auto* curve = new FuelInterpreter();
-
-// Interpolate the fuel flow for the current RPM
-// double fuelflow = curve->tacho_d1_frequency->get_value();
+// auto* curve = new FuelInterpreter();
+// auto* curve_interpolator = new CurveInterpolator(curve);
   
-   tacho_d1_frequency->connect_to(new Frequency(6))
-  // times by 6 to go from Hz to RPM
-          ->connect_to(new MovingAverage(4, 1.0,"/Engine Fuel/movingAVG"))
-          ->connect_to(new FuelInterpreter("/Engine Fuel/curve"))
-          ->connect_to(new SKOutputFloat("propulsion.engine.fuel.rate", "/Engine Fuel/sk_path"));      
+  auto* fuel_flow = new CurveInterpolator();
 
+  fuel_flow->connect_to(new FuelInterpreter("/Engine Fuel Flow/curve"))
+      ->connect_to(new MovingAverage(4, 1.0, "/Engine Fuel Flow/movingAVG"))
+      ->connect_to(new SKOutputFloat("propulsion.engine.main.fuel.rate",
+                                     "/Engine Fuel Flow/sk_path"));
+
+// Send fuel flow to N2k
+
+  new N2kEngineParameterDynamicSender("/NMEA 2000/Engine 1 fuel flow", 0,
+                                        nmea2000);  // Engine 1, instance 0
+  fuel_flow->connect_to(&(engine_dynamic_sender->fuel_rate_consumer_));                                  
 
   ///////////////////////////////////////////////////////////////////
   // Start the application

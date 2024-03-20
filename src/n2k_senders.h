@@ -87,6 +87,9 @@ class N2kEngineParameterRapidSender : public Startable, public Configurable {
   uint8_t engine_instance_;
   ExpiringValue<double> engine_speed_;
   ExpiringValue<double> engine_boost_pressure_;
+  // added for testing purposes
+  ExpiringValue<double> fuel_rate_;
+  //
   ExpiringValue<int8_t> engine_tilt_trim_;
 };
 
