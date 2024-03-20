@@ -36,6 +36,9 @@
 // Temperature sensor added
 #include "sensesp_onewire/onewire_temperature.h"
 #include "sensesp/transforms/linear.h"
+// Fuel flow calculation added
+#include "sensesp/transforms/moving_average.h"
+#include "sensesp/transforms/frequency.h"
 
 #ifdef ENABLE_SIGNALK
 #include "sensesp_app_builder.h"
@@ -53,6 +56,8 @@
 #include "halmet_display.h"
 #include "halmet_serial.h"
 #include "n2k_senders.h"
+#include "FuelInterpreter.h"
+
 
 using namespace sensesp;
 
@@ -325,13 +330,23 @@ if (display_present) {
   // To find valid Signal K Paths that fits your need you look at this link:
   // https://signalk.org/specification/1.4.0/doc/vesselsBranch.html
 
-  // Measure coolant temperature
-  auto* coolant_temp =
+  // Measure coolant temperature of the main engine
+ 
+  auto* Coolanttemperature=
       new OneWireTemperature(dts, read_delay, "/coolantTemperature/oneWire");
 
-  coolant_temp->connect_to(new Linear(1.0, 0.0, "/coolantTemperature/linear"))
+  // Send coolant temp to SK    
+
+  Coolanttemperature->connect_to(new Linear(1.0, 0.0, "/coolantTemperature/linear"))
       ->connect_to(new SKOutputFloat("propulsion.main.coolantTemperature",
                                      "/coolantTemperature/skPath"));
+
+  // Send coolant temp to n2k
+  
+      new N2kEngineParameterDynamicSender("/NMEA 2000/Engine 1 Cooling", 0,
+                                        nmea2000);  // Engine 1, instance 0
+  Coolanttemperature->connect_to(&(engine_dynamic_sender->temperature_consumer_));
+
 
   // Measure exhaust temperature
   //auto* exhaust_temp =
@@ -357,14 +372,31 @@ if (display_present) {
   //    ->connect_to(new SKOutputFloat("electrical.alternators.12V.temperature",
   //                                   "/12vAltTemperature/skPath"));
 
-  // Configuration is done, lets start the readings of the sensors!
+ 
+////////////////////////////////////////////////////////////////
+///////// Fuel flow calculated from RPM
+////////////////////////////////////////////////////////////////
 
+// Calculate the fuel flow based on the engine RPM
+
+// Get the instance of FuelInterpreter
+// Create an instance of CurveInterpolator
+auto* curve = new FuelInterpreter();
+
+// Interpolate the fuel flow for the current RPM
+// double fuelflow = curve->tacho_d1_frequency->get_value();
+  
+   tacho_d1_frequency->connect_to(new Frequency(6))
+  // times by 6 to go from Hz to RPM
+          ->connect_to(new MovingAverage(4, 1.0,"/Engine Fuel/movingAVG"))
+          ->connect_to(new FuelInterpreter("/Engine Fuel/curve"))
+          ->connect_to(new SKOutputFloat("propulsion.engine.fuel.rate", "/Engine Fuel/sk_path"));      
 
 
   ///////////////////////////////////////////////////////////////////
   // Start the application
-
   // Start networking, SK server connections and other SensESP internals
+
   sensesp_app->start();
 }
 
