@@ -384,9 +384,11 @@ if (display_present) {
 // auto* curve = new FuelInterpreter();
 // auto* curve_interpolator = new CurveInterpolator(curve);
   
-  auto* fuel_flow = new CurveInterpolator();
+  auto* fuel_flow = new FuelInterpreter();
 
-  fuel_flow->connect_to(new FuelInterpreter("/Engine Fuel Flow/curve"))
+  fuel_flow
+      ->connect_to(new Frequency(6))
+      ->connect_to(new FuelInterpreter("/Engine Fuel Flow/curve"))
       ->connect_to(new MovingAverage(4, 1.0, "/Engine Fuel Flow/movingAVG"))
       ->connect_to(new SKOutputFloat("propulsion.engine.main.fuel.rate",
                                      "/Engine Fuel Flow/sk_path"));
