@@ -379,12 +379,7 @@ if (display_present) {
 
 // Calculate the fuel flow based on the engine RPM
 
-// Get the instance of FuelInterpreter
-// Create an instance of CurveInterpolator
-// auto* curve = new FuelInterpreter();
-// auto* curve_interpolator = new CurveInterpolator(curve);
-  
-  auto* fuel_flow = new FuelInterpreter();
+  auto* fuel_flow = new CurveInterpolator();
 
   fuel_flow
       ->connect_to(new Frequency(6))
