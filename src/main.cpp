@@ -214,19 +214,19 @@ void setup() {
   // Tank 1, instance 0. Fuel capacity 130 liters.
 
   N2kFluidLevelSender* tank_a1_sender = new N2kFluidLevelSender(
-      "/NMEA 2000/Tank 1", 0, N2kft_Fuel, 130, nmea2000);
+      "/NMEA 2000/Tank Fuel", 0, N2kft_Fuel, 130, nmea2000);
   tank_a1_volume->connect_to(&(tank_a1_sender->tank_level_consumer_));
 
   // Total water tank capacity is 200 + 155 = 355 liters.
 
   // Tank 2, instance 1. Capacity is assumed to be 200 liters.
   N2kFluidLevelSender* tank_a2_sender = new N2kFluidLevelSender(
-      "/NMEA 2000/Tank 2", 1, N2kft_Water, 200, nmea2000);
+      "/NMEA 2000/Tank water fwd", 1, N2kft_Water, 200, nmea2000);
   tank_a2_volume->connect_to(&(tank_a2_sender->tank_level_consumer_));
 
   // Tank 3, instance 2. Capacity is assumed to be 155 liters.
   N2kFluidLevelSender* tank_a3_sender = new N2kFluidLevelSender(
-      "/NMEA 2000/Tank 3", 2, N2kft_Water, 155, nmea2000);
+      "/NMEA 2000/Tank water aft", 2, N2kft_Water, 155, nmea2000);
   tank_a3_volume->connect_to(&(tank_a3_sender->tank_level_consumer_));
 
 #endif  // ENABLE_NMEA2000_OUTPUT
@@ -260,7 +260,7 @@ if (display_present) {
 #ifdef ENABLE_NMEA2000_OUTPUT
 
   N2kEngineParameterDynamicSender* engine_dynamic_sender =
-      new N2kEngineParameterDynamicSender("/NMEA 2000/Engine 1 Dynamic", 0,
+      new N2kEngineParameterDynamicSender("/NMEA 2000/Engine 1 Dynamic Oil + Coolant alarm", 0,
                                           nmea2000);
   alarm_d2_input->connect_to(
       &(engine_dynamic_sender->low_oil_pressure_consumer_));
@@ -285,7 +285,7 @@ if (display_present) {
   //       Duplicate the lines below to connect more tachos, but be sure to
   //       use different engine instances.
   N2kEngineParameterRapidSender* engine_rapid_sender =
-      new N2kEngineParameterRapidSender("/NMEA 2000/Engine 1 Rapid Update", 0,
+      new N2kEngineParameterRapidSender("/NMEA 2000/Engine 1 Rapid Update RPM", 0,
                                         nmea2000);  // Engine 1, instance 0
   tacho_d1_frequency->connect_to(&(engine_rapid_sender->engine_speed_consumer_));
 #endif  // ENABLE_NMEA2000_OUTPUT
@@ -343,7 +343,7 @@ if (display_present) {
 
   // Send coolant temp to n2k
   
-      new N2kEngineParameterDynamicSender("/NMEA 2000/Engine 1 Cooling", 0,
+      new N2kEngineParameterDynamicSender("/NMEA 2000/Engine 1 Cooling temp", 0,
                                         nmea2000);  // Engine 1, instance 0
   Coolanttemperature->connect_to(&(engine_dynamic_sender->temperature_consumer_));
 
@@ -379,26 +379,25 @@ if (display_present) {
 
 // Calculate the fuel flow based on the engine RPM
 
-  auto* fuel_flow = new CurveInterpolator();
+// auto tacho_d1_frequency = ConnectTachoSender(kDigitalInputPin1, "RPM");
 
-  fuel_flow
-      ->connect_to(new Frequency(6))
-      ->connect_to(new FuelInterpreter("/Engine Fuel Flow/curve"))
-      ->connect_to(new MovingAverage(4, 1.0, "/Engine Fuel Flow/movingAVG"))
-      ->connect_to(new SKOutputFloat("propulsion.engine.main.fuel.rate",
-                                     "/Engine Fuel Flow/sk_path"));
+new N2kEngineParameterDynamicSender("/NMEA 2000/Engine 1 fuel flow", 0,
+                                    nmea2000);  // Engine 1, instance 0
 
-// Send fuel flow to N2k
+tacho_d1_frequency
+  // ->connect_to(new Frequency(6))
+  ->connect_to(new FuelInterpreter("/Engine Fuel Flow"))
+  ->connect_to(new MovingAverage(4, 1.0, "/Engine Fuel Flow/movingAVG"))
+  // send to SK
+  ->connect_to(new SKOutputFloat("propulsion.engine.main.fuel.rate","/Engine Fuel flow/sk_path"))
+  // send to N2k 
+  ->connect_to(&(engine_dynamic_sender->fuel_rate_consumer_));
 
-  new N2kEngineParameterDynamicSender("/NMEA 2000/Engine 1 fuel flow", 0,
-                                        nmea2000);  // Engine 1, instance 0
-  fuel_flow->connect_to(&(engine_dynamic_sender->fuel_rate_consumer_));                                  
+///////////////////////////////////////////////////////////////////
+// Start the application
+// Start networking, SK server connections and other SensESP internals
 
-  ///////////////////////////////////////////////////////////////////
-  // Start the application
-  // Start networking, SK server connections and other SensESP internals
-
-  sensesp_app->start();
+sensesp_app->start();
 }
 
 void loop() { app.tick(); }
