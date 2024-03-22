@@ -385,7 +385,7 @@ new N2kEngineParameterDynamicSender("/NMEA 2000/Engine 1 fuel flow", 0,
                                     nmea2000);  // Engine 1, instance 0
 
 tacho_d1_frequency
-  // ->connect_to(new Frequency(6))
+  ->connect_to(new Frequency(6))
   ->connect_to(new FuelInterpreter("/Engine Fuel Flow"))
   ->connect_to(new MovingAverage(4, 1.0, "/Engine Fuel Flow/movingAVG"))
   // send to SK
