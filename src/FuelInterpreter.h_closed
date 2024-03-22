@@ -4,6 +4,7 @@
 #include "sensesp/sensors/sensor.h"
 #include "sensesp/transforms/curveinterpolator.h"
 
+__SRC_FUEL_INTERPRETER_H__
 
 using namespace sensesp;
 
@@ -11,14 +12,13 @@ class FuelInterpreter : public CurveInterpolator {
  public:
   FuelInterpreter(String config_path = "")
       : CurveInterpolator(NULL, config_path) {
-    // Populate a lookup table to translate RPM to m3/s
+
     clear_samples();
-    // addSample(CurveInterpolator::Sample(RPM, m3/s));
 
-    // sample numbers for yanmar 3jh4e
-
-
+// addSample(CurveInterpolator::Sample(RPM, m3/s));
+// sample numbers for yanmar 3jh4e
 // Conversion factor from liters per hour to m³/s
+
 double conversionFactor = 1.0 / 3600000;
 
 add_sample(CurveInterpolator::Sample(1000, 0.8 * conversionFactor));

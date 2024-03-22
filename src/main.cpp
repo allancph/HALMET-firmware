@@ -39,6 +39,7 @@
 // Fuel flow calculation added
 #include "sensesp/transforms/moving_average.h"
 #include "sensesp/transforms/frequency.h"
+#include "sensesp/transforms/curveinterpolator.h"
 
 #ifdef ENABLE_SIGNALK
 #include "sensesp_app_builder.h"
@@ -56,7 +57,6 @@
 #include "halmet_display.h"
 #include "halmet_serial.h"
 #include "n2k_senders.h"
-#include "FuelInterpreter.h"
 
 
 using namespace sensesp;
@@ -204,9 +204,9 @@ void setup() {
 
   // Connect the tank senders.
   // EDIT: To enable more tanks, uncomment the lines below.
-  auto tank_a1_volume = ConnectTankSender(ads1115, 0, "diesel");
-  auto tank_a2_volume = ConnectTankSender(ads1115, 1, "water fwd");
-  auto tank_a3_volume = ConnectTankSender(ads1115, 2, "water aft");
+  auto tank_a1_volume = ConnectTankSender(ads1115, 0, "Fuel");
+  auto tank_a2_volume = ConnectTankSender(ads1115, 1, "Water forward");
+  auto tank_a3_volume = ConnectTankSender(ads1115, 2, "Water aft");
   // auto tank_a4_volume = ConnectTankSender(ads1115, 3, "A4");
 
 #ifdef ENABLE_NMEA2000_OUTPUT
@@ -277,7 +277,13 @@ if (display_present) {
 
   // Connect the tacho senders. Engine name is "main".
   // EDIT: More tacho inputs can be defined by duplicating the line below.
+
   auto tacho_d1_frequency = ConnectTachoSender(kDigitalInputPin1, "RPM");
+
+  // Connect outputs to the N2k senders.
+  // EDIT: Make sure this matches your tacho configuration above.
+  //       Duplicate the lines below to connect more tachos, but be sure to
+  //       use different engine instances.
 
 #ifdef ENABLE_NMEA2000_OUTPUT
   // Connect outputs to the N2k senders.
@@ -285,15 +291,20 @@ if (display_present) {
   //       Duplicate the lines below to connect more tachos, but be sure to
   //       use different engine instances.
   N2kEngineParameterRapidSender* engine_rapid_sender =
-      new N2kEngineParameterRapidSender("/NMEA 2000/Engine 1 Rapid Update RPM", 0,
+      new N2kEngineParameterRapidSender("/NMEA 2000/Engine 1 Rapid Update", 0,
                                         nmea2000);  // Engine 1, instance 0
-  tacho_d1_frequency->connect_to(&(engine_rapid_sender->engine_speed_consumer_));
+  tacho_d1_frequency
+      ->connect_to(&(engine_rapid_sender->engine_speed_consumer_))
+
+;
+
 #endif  // ENABLE_NMEA2000_OUTPUT
 
+
   if (display_present) {
-        tacho_d1_frequency->connect_to(new LambdaConsumer<float>(
+    tacho_d1_frequency->connect_to(new LambdaConsumer<float>(
         [](float value) { PrintValue(display, 3, "RPM D1", 60 * value); }));
-  }
+}
 
   ///////////////////////////////////////////////////////////////////
   // Display setup
@@ -338,7 +349,7 @@ if (display_present) {
   // Send coolant temp to SK    
 
   Coolanttemperature->connect_to(new Linear(1.0, 0.0, "/coolantTemperature/linear"))
-      ->connect_to(new SKOutputFloat("propulsion.main.coolantTemperature",
+      ->connect_to(new SKOutputFloat("propulsion.engine.coolantTemperature",
                                      "/coolantTemperature/skPath"));
 
   // Send coolant temp to n2k
@@ -381,21 +392,62 @@ if (display_present) {
 
 // auto tacho_d1_frequency = ConnectTachoSender(kDigitalInputPin1, "RPM");
 
-new N2kEngineParameterDynamicSender("/NMEA 2000/Engine 1 fuel flow", 0,
-                                    nmea2000);  // Engine 1, instance 0
+// new N2kEngineParameterDynamicSender("/NMEA 2000/Engine 1 fuel flow", 0,
+//                                   nmea2000);  // Engine 1, instance 0
+
+#ifndef __SRC_FUEL_INTERPRETER_H__
+#define __SRC_FUEL_INTERPRETER_H__
+
+__SRC_FUEL_INTERPRETER_H__
+
+using namespace sensesp;
+
+class FuelInterpreter : public CurveInterpolator {
+ public:
+  FuelInterpreter(String config_path = "")
+      : CurveInterpolator(NULL, config_path) {
+
+    clear_samples();
+
+// addSample(CurveInterpolator::Sample(RPM, m3/s));
+// sample numbers for yanmar 3jh4e
+// Conversion factor from liters per hour to m³/s
+
+double conversionFactor = 1.0 / 3600000;
+
+add_sample(CurveInterpolator::Sample(1000, 0.8 * conversionFactor));
+add_sample(CurveInterpolator::Sample(1200, 1.2 * conversionFactor));
+add_sample(CurveInterpolator::Sample(1500, 1.3 * conversionFactor));
+add_sample(CurveInterpolator::Sample(1700, 1.6 * conversionFactor));
+add_sample(CurveInterpolator::Sample(2000, 2.4 * conversionFactor));
+add_sample(CurveInterpolator::Sample(2200, 3.5 * conversionFactor));
+add_sample(CurveInterpolator::Sample(2500, 4.9 * conversionFactor));
+add_sample(CurveInterpolator::Sample(2700, 6.5 * conversionFactor));
+add_sample(CurveInterpolator::Sample(3000, 8.6 * conversionFactor));
+  
+  }
+};
+
+#endif  // __SRC_FUEL_INTERPRETER_H__
+
+
+
+
 
 tacho_d1_frequency
-  ->connect_to(new Frequency(6))
-  ->connect_to(new FuelInterpreter("/Engine Fuel Flow"))
-  ->connect_to(new MovingAverage(4, 1.0, "/Engine Fuel Flow/movingAVG"))
-  // send to SK
-  ->connect_to(new SKOutputFloat("propulsion.engine.main.fuel.rate","/Engine Fuel flow/sk_path"))
-  // send to N2k 
-  ->connect_to(&(engine_dynamic_sender->fuel_rate_consumer_));
+ ->connect_to(new Frequency(6))
+ ->connect_to(new FuelInterpreter(
+ "/Engine Fuel Flow"))
+->connect_to(new MovingAverage(4, 1.0,"/Engine Fuel Flow/movingAVG"))
+// send to SK
+->connect_to(new SKOutputFloat("propulsion.engine.fuel.rate","/Engine Fuel flow/sk_path"));
 
+// send to N2k
+// ->connect_to(&(engine_dynamic_sender->fuel_rate_consumer_));
 ///////////////////////////////////////////////////////////////////
 // Start the application
-// Start networking, SK server connections and other SensESP internals
+// Start networking, SK server connections
+// and other SensESP internals
 
 sensesp_app->start();
 }
