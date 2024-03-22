@@ -247,16 +247,14 @@ if (display_present) {
   // EDIT: More alarm inputs can be defined by duplicating the lines below.
   // Make sure to not define a pin for both a tacho and an alarm.
   auto alarm_d2_input = ConnectAlarmSender(kDigitalInputPin2, "OilPressureLow");
-  // inverted auto alarm_d3_input = ConnectAlarmSender(kDigitalInputPin3, "Nothing");
-  auto alarm_d4_input = ConnectAlarmSender(kDigitalInputPin4, "CoolantWaterHot");
+  auto alarm_d3_input = ConnectAlarmSender(kDigitalInputPin3, "CoolantWaterHot");
 
   // Update the alarm states based on the input value changes.
   // EDIT: If you added more alarm inputs, uncomment the respective lines below.
 
   alarm_d2_input->connect_to(
       new LambdaConsumer<bool>([](bool value) { alarm_states[1] = value; }));
-      // D3 
-  alarm_d4_input->connect_to(
+  alarm_d3_input->connect_to(
       new LambdaConsumer<bool>([](bool value) { alarm_states[2] = value; }));
     
 #ifdef ENABLE_NMEA2000_OUTPUT
@@ -266,8 +264,7 @@ if (display_present) {
                                           nmea2000);
   alarm_d2_input->connect_to(
       &(engine_dynamic_sender->low_oil_pressure_consumer_));
-      // D3
-  alarm_d4_input->connect_to(
+  alarm_d3_input->connect_to(
       &(engine_dynamic_sender->over_temperature_consumer_));
 
 #endif  // ENABLE_NMEA2000_OUTPUT
