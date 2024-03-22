@@ -36,7 +36,7 @@ FloatProducer* ConnectTankSender(Adafruit_ADS1115* ads1115, int channel,
 
   snprintf(config_path, sizeof(config_path), "/Tank %s/Resistance SK Path",
            name.c_str());
-  snprintf(sk_path, sizeof(sk_path), "tanks.fuel.%s.senderResistance",
+  snprintf(sk_path, sizeof(sk_path), "tanks.%s.senderResistance",
            name.c_str());
   snprintf(meta_display_name, sizeof(meta_display_name), "Resistance %s",
            name.c_str());
@@ -60,7 +60,7 @@ FloatProducer* ConnectTankSender(Adafruit_ADS1115* ads1115, int channel,
 
   snprintf(config_path, sizeof(config_path), "/Tank %s/Current Level SK Path",
            name.c_str());
-  snprintf(sk_path, sizeof(sk_path), "tanks.fuel.%s.currentLevel",
+  snprintf(sk_path, sizeof(sk_path), "tanks.%s.currentLevel",
            name.c_str());
   snprintf(meta_display_name, sizeof(meta_display_name), "Tank %s level",
            name.c_str());
@@ -74,7 +74,7 @@ FloatProducer* ConnectTankSender(Adafruit_ADS1115* ads1115, int channel,
 
   snprintf(config_path, sizeof(config_path), "/Tank %s/Current Volume SK Path",
            name.c_str());
-  snprintf(sk_path, sizeof(sk_path), "tanks.fuel.%s.currentVolume",
+  snprintf(sk_path, sizeof(sk_path), "tanks.%s.currentVolume",
            name.c_str());
   snprintf(meta_display_name, sizeof(meta_display_name), "Tank %s volume",
            name.c_str());

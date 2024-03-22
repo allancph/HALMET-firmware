@@ -206,8 +206,8 @@ void setup() {
   // Connect the tank senders.
   // EDIT: To enable more tanks, uncomment the lines below.
   auto tank_a1_volume = ConnectTankSender(ads1115, 0, "Fuel");
-  auto tank_a2_volume = ConnectTankSender(ads1115, 1, "Water forward");
-  auto tank_a3_volume = ConnectTankSender(ads1115, 2, "Water aft");
+  auto tank_a2_volume = ConnectTankSender(ads1115, 1, "WaterForward");
+  auto tank_a3_volume = ConnectTankSender(ads1115, 2, "WaterAft");
   // auto tank_a4_volume = ConnectTankSender(ads1115, 3, "A4");
 
 #ifdef ENABLE_NMEA2000_OUTPUT
@@ -246,27 +246,28 @@ if (display_present) {
 
   // EDIT: More alarm inputs can be defined by duplicating the lines below.
   // Make sure to not define a pin for both a tacho and an alarm.
-  auto alarm_d2_input = ConnectAlarmSender(kDigitalInputPin2, "Oil pressure low");
-  // inverted auto alarm_d4_input = ConnectAlarmSender(kDigitalInputPin3, "Nothing");
-  auto alarm_d3_input = ConnectAlarmSender(kDigitalInputPin3, "Cooling water too hot");
+  auto alarm_d2_input = ConnectAlarmSender(kDigitalInputPin2, "OilPressureLow");
+  // inverted auto alarm_d3_input = ConnectAlarmSender(kDigitalInputPin3, "Nothing");
+  auto alarm_d4_input = ConnectAlarmSender(kDigitalInputPin4, "CoolantWaterHot");
 
   // Update the alarm states based on the input value changes.
   // EDIT: If you added more alarm inputs, uncomment the respective lines below.
 
   alarm_d2_input->connect_to(
       new LambdaConsumer<bool>([](bool value) { alarm_states[1] = value; }));
-  alarm_d3_input->connect_to(
+      // D3 
+  alarm_d4_input->connect_to(
       new LambdaConsumer<bool>([](bool value) { alarm_states[2] = value; }));
     
 #ifdef ENABLE_NMEA2000_OUTPUT
 
   N2kEngineParameterDynamicSender* engine_dynamic_sender =
-      new N2kEngineParameterDynamicSender("/NMEA 2000/Engine 1 Dynamic Oil + Coolant alarm", 0,
+      new N2kEngineParameterDynamicSender("/NMEA 2000/Engine 1 Dynamic Oil and Coolant alarm", 0,
                                           nmea2000);
   alarm_d2_input->connect_to(
       &(engine_dynamic_sender->low_oil_pressure_consumer_));
-
-  alarm_d3_input->connect_to(
+      // D3
+  alarm_d4_input->connect_to(
       &(engine_dynamic_sender->over_temperature_consumer_));
 
 #endif  // ENABLE_NMEA2000_OUTPUT
@@ -279,7 +280,7 @@ if (display_present) {
   // Connect the tacho senders. Engine name is "main".
   // EDIT: More tacho inputs can be defined by duplicating the line below.
 
-  auto tacho_d1_frequency = ConnectTachoSender(kDigitalInputPin1, "RPM");
+  auto tacho_d1_frequency = ConnectTachoSender(kDigitalInputPin1, "engine");
 
   // Connect outputs to the N2k senders.
   // EDIT: Make sure this matches your tacho configuration above.
@@ -349,40 +350,15 @@ if (display_present) {
 
   // Send coolant temp to SK
 
-  Coolanttemperature->connect_to(new Linear(1.0, 0.0, "/coolantTemperatureTemperature/linear"))
+  Coolanttemperature 
   ->connect_to(new SKOutputFloat("propulsion.engine.coolantTemperature", "/coolantTemperature/skPath"));
 
   // Send coolant temp to n2k
   
       new N2kEngineParameterDynamicSender("/NMEA 2000/Engine 1 coolant temperature", 0,nmea2000);   // Engine 1, instance 0
   
-  Coolanttemperature->connect_to(new Linear(1.0, 0.0, "N2K/coolantTemperatureTemperature/linear"))
+  Coolanttemperature 
   ->connect_to(&(engine_dynamic_sender->temperature_consumer_));
-
-
-  // Measure exhaust temperature
-  //auto* exhaust_temp =
-  //    new OneWireTemperature(dts, read_delay, "/exhaustTemperature/oneWire");
-
-  //exhaust_temp->connect_to(new Linear(1.0, 0.0, "/exhaustTemperature/linear"))
-  //    ->connect_to(new SKOutputFloat("propulsion.mainEngine.exhaustTemperature",
-  //                                   "/exhaustTemperature/skPath"));
-
-  // Measure temperature of 24v alternator
-  //auto* alt_24v_temp =
-  //    new OneWireTemperature(dts, read_delay, "/24vAltTemperature/oneWire");
-
-  //alt_24v_temp->connect_to(new Linear(1.0, 0.0, "/24vAltTemperature/linear"))
-  //    ->connect_to(new SKOutputFloat("electrical.alternators.24V.temperature",
-  //                                   "/24vAltTemperature/skPath"));
-
-  // Measure temperature of 12v alternator
-  //auto* alt_12v_temp =
-  //   new OneWireTemperature(dts, read_delay, "/12vAltTemperature/oneWire");
-
-  //alt_12v_temp->connect_to(new Linear(1.0, 0.0, "/12vAltTemperature/linear"))
-  //    ->connect_to(new SKOutputFloat("electrical.alternators.12V.temperature",
-  //                                   "/12vAltTemperature/skPath"));
 
  
 ////////////////////////////////////////////////////////////////
@@ -390,18 +366,6 @@ if (display_present) {
 ////////////////////////////////////////////////////////////////
 
 // Calculate the fuel flow based on the engine RPM
-
-// auto tacho_d1_frequency = ConnectTachoSender(kDigitalInputPin1, "RPM");
-
-// new N2kEngineParameterDynamicSender("/NMEA 2000/Engine 1 fuel flow", 0,
-//                                   nmea2000);  // Engine 1, instance 0
-
-#ifndef __SRC_FUEL_INTERPRETER_H__
-#define __SRC_FUEL_INTERPRETER_H__
-
-__SRC_FUEL_INTERPRETER_H__
-
-using namespace sensesp;
 
 class FuelInterpreter : public CurveInterpolator {
  public:
@@ -411,7 +375,7 @@ class FuelInterpreter : public CurveInterpolator {
     clear_samples();
 
 // addSample(CurveInterpolator::Sample(RPM, m3/s));
-// sample numbers for yanmar 3jh4e
+// sample numbers from yanmar 3jh4e datasheet
 // Conversion factor from liters per hour to m³/s
 
 double conversionFactor = 1.0 / 3600000;
@@ -429,22 +393,21 @@ add_sample(CurveInterpolator::Sample(3000, 8.6 * conversionFactor));
   }
 };
 
-#endif  // __SRC_FUEL_INTERPRETER_H__
+// Connect the tacho sender to the fuel flow calculation
 
-
-
-
-
-tacho_d1_frequency
- ->connect_to(new Frequency(6))
- ->connect_to(new FuelInterpreter(
- "/Engine Fuel Flow"))
-->connect_to(new MovingAverage(4, 1.0,"/Engine Fuel Flow/movingAVG"))
-// send to SK
-->connect_to(new SKOutputFloat("propulsion.engine.fuel.rate","/Engine Fuel flow/sk_path"));
+tacho_d1_frequency->connect_to(new Frequency(1.0, "/Tacho frequency factor Fuel flow calculation"))
+    ->connect_to(new FuelInterpreter("/Engine Fuel flow"))
+    ->connect_to(new MovingAverage(4, 1.0, "/Engine Fuel flow/movingAVG"))
+    // send to SK
+    ->connect_to(new SKOutputFloat("propulsion.engine.fuel.rate",
+                                   "/Engine Fuel flow/sk_path"));
 
 // send to N2k
-// ->connect_to(&(engine_dynamic_sender->fuel_rate_consumer_));
+
+new N2kEngineParameterDynamicSender("/NMEA 2000/Engine 1 fuel flow", 0,
+                                    nmea2000);  // Engine 1, instance 0
+
+tacho_d1_frequency->connect_to(&(engine_dynamic_sender->fuel_rate_consumer_));
 ///////////////////////////////////////////////////////////////////
 // Start the application
 // Start networking, SK server connections
