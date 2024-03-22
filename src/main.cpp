@@ -62,6 +62,7 @@
 using namespace sensesp;
 
 #ifndef ENABLE_SIGNALK
+
 #define BUILDER_CLASS SensESPMinimalAppBuilder
 SensESPMinimalApp *sensesp_app;
 Networking *networking;
@@ -341,22 +342,22 @@ if (display_present) {
   // To find valid Signal K Paths that fits your need you look at this link:
   // https://signalk.org/specification/1.4.0/doc/vesselsBranch.html
 
-  // Measure coolant temperature of the main engine
- 
+  // Measure coolant temperature of the main engineSensESPAppBuilder builder
+
   auto* Coolanttemperature=
       new OneWireTemperature(dts, read_delay, "/coolantTemperature/oneWire");
 
-  // Send coolant temp to SK    
+  // Send coolant temp to SK
 
-  Coolanttemperature->connect_to(new Linear(1.0, 0.0, "/coolantTemperature/linear"))
-      ->connect_to(new SKOutputFloat("propulsion.engine.coolantTemperature",
-                                     "/coolantTemperature/skPath"));
+  Coolanttemperature->connect_to(new Linear(1.0, 0.0, "/coolantTemperatureTemperature/linear"))
+  ->connect_to(new SKOutputFloat("propulsion.engine.coolantTemperature", "/coolantTemperature/skPath"));
 
   // Send coolant temp to n2k
   
-      new N2kEngineParameterDynamicSender("/NMEA 2000/Engine 1 Cooling temp", 0,
-                                        nmea2000);  // Engine 1, instance 0
-  Coolanttemperature->connect_to(&(engine_dynamic_sender->temperature_consumer_));
+      new N2kEngineParameterDynamicSender("/NMEA 2000/Engine 1 coolant temperature", 0,nmea2000);   // Engine 1, instance 0
+  
+  Coolanttemperature->connect_to(new Linear(1.0, 0.0, "N2K/coolantTemperatureTemperature/linear"))
+  ->connect_to(&(engine_dynamic_sender->temperature_consumer_));
 
 
   // Measure exhaust temperature
