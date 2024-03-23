@@ -392,19 +392,22 @@ add_sample(CurveInterpolator::Sample(3000, 8.6 * conversionFactor));
 
 // Connect the tacho sender to the fuel flow calculation
 
+// setup N2k
+new N2kEngineParameterDynamicSender("/NMEA 2000/Engine 1 fuel flow", 0,
+                                    nmea2000);  // Engine 1, instance 0
+
+// Adjust
 tacho_d1_frequency->connect_to(new Frequency(1.0, "/Tacho frequency factor Fuel flow calculation"))
     ->connect_to(new FuelInterpreter("/Engine Fuel flow"))
     ->connect_to(new MovingAverage(4, 1.0, "/Engine Fuel flow/movingAVG"))
     // send to SK
     ->connect_to(new SKOutputFloat("propulsion.engine.fuel.rate",
-                                   "/Engine Fuel flow/sk_path"));
+                                   "/Engine Fuel flow/sk_path"))
+    // send to N2k
+    ->connect_to(&(engine_dynamic_sender->fuel_rate_consumer_));
 
-// send to N2k
 
-new N2kEngineParameterDynamicSender("/NMEA 2000/Engine 1 fuel flow", 0,
-                                    nmea2000);  // Engine 1, instance 0
 
-tacho_d1_frequency->connect_to(&(engine_dynamic_sender->fuel_rate_consumer_));
 ///////////////////////////////////////////////////////////////////
 // Start the application
 // Start networking, SK server connections
