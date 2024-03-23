@@ -216,25 +216,19 @@ void setup() {
 
   N2kFluidLevelSender* tank_a1_sender = new N2kFluidLevelSender(
       "/NMEA 2000/Tank Fuel", 0, N2kft_Fuel, 130, nmea2000);
-  tank_a1_volume
-  ->connect_to(new MovingAverage(100, 1.0, "/N2K/Fuel tank/movingAVG"))
-  ->connect_to(&(tank_a1_sender->tank_level_consumer_));
+  tank_a1_volume->connect_to(&(tank_a1_sender->tank_level_consumer_));
 
   // Total water tank capacity is 200 + 155 = 355 liters.
 
   // Tank 2, instance 1. Capacity is assumed to be 200 liters.
   N2kFluidLevelSender* tank_a2_sender = new N2kFluidLevelSender(
       "/NMEA 2000/Tank water fwd", 1, N2kft_Water, 200, nmea2000);
-  tank_a2_volume
-  ->connect_to(new MovingAverage(100, 1.0, "/N2K/Fwd water tank/movingAVG"))
-  ->connect_to(&(tank_a2_sender->tank_level_consumer_));
+  tank_a2_volume->connect_to(&(tank_a2_sender->tank_level_consumer_));
 
   // Tank 3, instance 2. Capacity is assumed to be 155 liters.
   N2kFluidLevelSender* tank_a3_sender = new N2kFluidLevelSender(
       "/NMEA 2000/Tank water aft", 2, N2kft_Water, 155, nmea2000);
-  tank_a3_volume
-  ->connect_to(new MovingAverage(100, 1.0, "/N2K/Aft water tank/movingAVG"))
-  ->connect_to(&(tank_a3_sender->tank_level_consumer_));
+  tank_a3_volume->connect_to(&(tank_a3_sender->tank_level_consumer_));
 
 #endif  // ENABLE_NMEA2000_OUTPUT
 
