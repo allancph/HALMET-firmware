@@ -234,11 +234,11 @@ void setup() {
 
 if (display_present) {
   tank_a1_volume->connect_to(new LambdaConsumer<float>(
-      [](float value) { PrintValue(display, 2, "diesel", 100 * value); }));
+      [](float value) { PrintValue(display, 2, "FUEL", 100 * value); }));
   tank_a2_volume->connect_to(new LambdaConsumer<float>(
-      [](float value) { PrintValue(display, 3, "water forward", 100 * value); }));
+      [](float value) { PrintValue(display, 3, "H2O FWD", 100 * value); }));
   tank_a3_volume->connect_to(new LambdaConsumer<float>(
-      [](float value) { PrintValue(display, 4, "water aft", 100 * value); }));
+      [](float value) { PrintValue(display, 4, "H20 AFT", 100 * value); }));
 }
 
    ///////////////////////////////////////////////////////////////////
@@ -300,9 +300,9 @@ if (display_present) {
 #endif  // ENABLE_NMEA2000_OUTPUT
 
 
-  if (display_present) {
-    tacho_d1_frequency->connect_to(new LambdaConsumer<float>(
-        [](float value) { PrintValue(display, 3, "RPM D1", 60 * value); }));
+if (display_present) {
+        // tacho_d1_frequency->connect_to(new LambdaConsumer<float>(
+        // [](float value) { PrintValue(display, 3, "RPM", 60 * value); }));
 }
 
   ///////////////////////////////////////////////////////////////////
@@ -311,19 +311,20 @@ if (display_present) {
   // Connect the outputs to the display
   if (display_present) {
 #ifdef ENABLE_SIGNALK
-    app.onRepeat(1000, []() {
-      PrintValue(display, 1, "IP:", WiFi.localIP().toString());
-    });
+app.onRepeat(1000, []() {
+   PrintValue(display, 1, "IP:", WiFi.localIP().toString());
+ });
+
 #endif
 
-    // Create a poor man's "christmas tree" display for the alarms
-    app.onRepeat(1000, []() {
-      char state_string[5] = {};
-      for (int i = 0; i < 4; i++) {
-        state_string[i] = alarm_states[i] ? '*' : '_';
-      }
-      PrintValue(display, 4, "Alarm", state_string);
-    });
+ //Create a poor man's "christmas tree" display for the alarms
+app.onRepeat(1000, []() {
+  char state_string[5] = {};
+ for (int i = 0; i < 4; i++) {
+    state_string[i] = alarm_states[i] ? '*' : '_';
+  }
+  //      PrintValue(display, 4, "Alarm", state_string);
+ });
   }
 
 
@@ -431,5 +432,8 @@ tacho_d1_frequency->connect_to(new Frequency(6.0, "/Tacho frequency factor Fuel 
 
 sensesp_app->start();
 }
+
+
+
 
 void loop() { app.tick(); }
