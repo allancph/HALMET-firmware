@@ -216,19 +216,25 @@ void setup() {
 
   N2kFluidLevelSender* tank_a1_sender = new N2kFluidLevelSender(
       "/NMEA 2000/Tank Fuel", 0, N2kft_Fuel, 130, nmea2000);
-  tank_a1_volume->connect_to(&(tank_a1_sender->tank_level_consumer_));
+  tank_a1_volume
+  ->connect_to(new MovingAverage(100, 1.0, "/N2K/Fuel tank/movingAVG"))
+  ->connect_to(&(tank_a1_sender->tank_level_consumer_));
 
   // Total water tank capacity is 200 + 155 = 355 liters.
 
   // Tank 2, instance 1. Capacity is assumed to be 200 liters.
   N2kFluidLevelSender* tank_a2_sender = new N2kFluidLevelSender(
       "/NMEA 2000/Tank water fwd", 1, N2kft_Water, 200, nmea2000);
-  tank_a2_volume->connect_to(&(tank_a2_sender->tank_level_consumer_));
+  tank_a2_volume
+  ->connect_to(new MovingAverage(100, 1.0, "/N2K/Fwd water tank/movingAVG"))
+  ->connect_to(&(tank_a2_sender->tank_level_consumer_));
 
   // Tank 3, instance 2. Capacity is assumed to be 155 liters.
   N2kFluidLevelSender* tank_a3_sender = new N2kFluidLevelSender(
       "/NMEA 2000/Tank water aft", 2, N2kft_Water, 155, nmea2000);
-  tank_a3_volume->connect_to(&(tank_a3_sender->tank_level_consumer_));
+  tank_a3_volume
+  ->connect_to(new MovingAverage(100, 1.0, "/N2K/Aft water tank/movingAVG"))
+  ->connect_to(&(tank_a3_sender->tank_level_consumer_));
 
 #endif  // ENABLE_NMEA2000_OUTPUT
 
@@ -377,14 +383,30 @@ class FuelInterpreter : public CurveInterpolator {
 
 double conversionFactor = 1.0 / 3600000;
 
-add_sample(CurveInterpolator::Sample(1000, 0.8 * conversionFactor));
-add_sample(CurveInterpolator::Sample(1200, 1.2 * conversionFactor));
+add_sample(CurveInterpolator::Sample(0, 0.0 * conversionFactor));
+add_sample(CurveInterpolator::Sample(125, 0.016 * conversionFactor));
+add_sample(CurveInterpolator::Sample(250, 0.032 * conversionFactor));
+add_sample(CurveInterpolator::Sample(375, 0.048 * conversionFactor));
+add_sample(CurveInterpolator::Sample(500, 0.8 * conversionFactor));
+add_sample(CurveInterpolator::Sample(625, 0.8 * conversionFactor));
+add_sample(CurveInterpolator::Sample(750, 0.96 * conversionFactor));
+add_sample(CurveInterpolator::Sample(875, 1.08 * conversionFactor));
+add_sample(CurveInterpolator::Sample(1000, 1.2 * conversionFactor));
+add_sample(CurveInterpolator::Sample(1125, 1.25 * conversionFactor));
+add_sample(CurveInterpolator::Sample(1250, 1.275 * conversionFactor));
+add_sample(CurveInterpolator::Sample(1375, 1.3 * conversionFactor));
 add_sample(CurveInterpolator::Sample(1500, 1.3 * conversionFactor));
-add_sample(CurveInterpolator::Sample(1700, 1.6 * conversionFactor));
+add_sample(CurveInterpolator::Sample(1625, 1.45 * conversionFactor));
+add_sample(CurveInterpolator::Sample(1750, 1.525 * conversionFactor));
+add_sample(CurveInterpolator::Sample(1875, 1.6 * conversionFactor));
 add_sample(CurveInterpolator::Sample(2000, 2.4 * conversionFactor));
-add_sample(CurveInterpolator::Sample(2200, 3.5 * conversionFactor));
+add_sample(CurveInterpolator::Sample(2125, 2.95 * conversionFactor));
+add_sample(CurveInterpolator::Sample(2250, 3.225 * conversionFactor));
+add_sample(CurveInterpolator::Sample(2375, 3.425 * conversionFactor));
 add_sample(CurveInterpolator::Sample(2500, 4.9 * conversionFactor));
-add_sample(CurveInterpolator::Sample(2700, 6.5 * conversionFactor));
+add_sample(CurveInterpolator::Sample(2625, 5.7 * conversionFactor));
+add_sample(CurveInterpolator::Sample(2750, 6.5 * conversionFactor));
+add_sample(CurveInterpolator::Sample(2875, 7.55 * conversionFactor));
 add_sample(CurveInterpolator::Sample(3000, 8.6 * conversionFactor));
   
   }
@@ -397,7 +419,7 @@ new N2kEngineParameterDynamicSender("/NMEA 2000/Engine 1 fuel flow", 0,
                                     nmea2000);  // Engine 1, instance 0
 
 // Adjust
-tacho_d1_frequency->connect_to(new Frequency(1.0, "/Tacho frequency factor Fuel flow calculation"))
+tacho_d1_frequency->connect_to(new Frequency(6.0, "/Tacho frequency factor Fuel flow calculation"))
     ->connect_to(new FuelInterpreter("/Engine Fuel flow"))
     ->connect_to(new MovingAverage(4, 1.0, "/Engine Fuel flow/movingAVG"))
     // send to SK
