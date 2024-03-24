@@ -301,8 +301,8 @@ if (display_present) {
 
 
 if (display_present) {
-        // tacho_d1_frequency->connect_to(new LambdaConsumer<float>(
-        // [](float value) { PrintValue(display, 3, "RPM", 60 * value); }));
+         tacho_d1_frequency->connect_to(new LambdaConsumer<float>(
+         [](float value) { PrintValue(display, 6, "RPM", 60 * value); }));
 }
 
   ///////////////////////////////////////////////////////////////////
@@ -323,7 +323,7 @@ app.onRepeat(1000, []() {
  for (int i = 0; i < 4; i++) {
     state_string[i] = alarm_states[i] ? '*' : '_';
   }
-  //      PrintValue(display, 4, "Alarm", state_string);
+        PrintValue(display, 5, "Alarm", state_string);
  });
   }
 
@@ -414,7 +414,9 @@ new N2kEngineParameterDynamicSender("/NMEA 2000/Engine 1 fuel flow", 0,
                                     nmea2000);  // Engine 1, instance 0
 
 // Adjust
-tacho_d1_frequency->connect_to(new Frequency(6.0, "/Tacho frequency factor Fuel flow calculation"))
+tacho_d1_frequency
+    ->connect_to(
+        new Frequency(6.0, "/Tacho frequency factor Fuel flow calculation"))
     ->connect_to(new FuelInterpreter("/Engine Fuel flow"))
     ->connect_to(new MovingAverage(4, 1.0, "/Engine Fuel flow/movingAVG"))
     // send to SK
@@ -422,8 +424,6 @@ tacho_d1_frequency->connect_to(new Frequency(6.0, "/Tacho frequency factor Fuel 
                                    "/Engine Fuel flow/sk_path"))
     // send to N2k
     ->connect_to(&(engine_dynamic_sender->fuel_rate_consumer_));
-
-
 
 ///////////////////////////////////////////////////////////////////
 // Start the application
