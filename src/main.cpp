@@ -302,7 +302,7 @@ if (display_present) {
 
 if (display_present) {
          tacho_d1_frequency->connect_to(new LambdaConsumer<float>(
-         [](float value) { PrintValue(display, 6, "RPM", 60 * value); }));
+         [](float value) { PrintValue(display, 5, "RPM", 60 * value); }));
 }
 
   ///////////////////////////////////////////////////////////////////
@@ -319,11 +319,11 @@ app.onRepeat(1000, []() {
 
  //Create a poor man's "christmas tree" display for the alarms
 app.onRepeat(1000, []() {
-  char state_string[5] = {};
+  char state_string[6] = {};
  for (int i = 0; i < 4; i++) {
     state_string[i] = alarm_states[i] ? '*' : '_';
   }
-        PrintValue(display, 5, "Alarm", state_string);
+        PrintValue(display, 6, "Alarm", state_string);
  });
   }
 
