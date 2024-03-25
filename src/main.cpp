@@ -78,6 +78,19 @@ SystemStatusLed* system_status_led;
 tNMEA2000* nmea2000;
 #endif
 
+
+// CPU temp
+#ifdef __cplusplus
+extern "C" {
+#endif
+uint8_t temprature_sens_read();
+#ifdef __cplusplus
+}
+#endif
+uint8_t temprature_sens_read();
+
+// Initialize i2c interface
+
 TwoWire* i2c;
 Adafruit_SSD1306* display;
 
@@ -429,6 +442,23 @@ tacho_d1_frequency
 // Start the application
 // Start networking, SK server connections
 // and other SensESP internals
+
+
+// Add CPU temperature to display
+
+float CPUtemperature = (temprature_sens_read() - 32) * 0.5556;  // Read the temperature and convert to Celsius
+
+// Print CPU temperature to display on line 7
+PrintValue(display, 7, "CPU Temp", CPUtemperature);
+
+// Send to SK
+
+// CPUtemperature connect_to->(new SKOutputFloat("environment.temperature.cpu",
+//                               "/CPU temperature/skPath"));
+
+/////////////////////
+/// Start the app ///
+/////////////////////
 
 sensesp_app->start();
 }
