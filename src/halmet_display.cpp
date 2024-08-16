@@ -20,7 +20,7 @@ bool InitializeSSD1306(ReactESP* app, SensESPBaseApp* sensesp_app,
     return false;
   }
   delay(100);
-  (*display)->setRotation(3);
+  (*display)->setRotation(2);
   (*display)->clearDisplay();
   (*display)->setTextSize(1);
   (*display)->setTextColor(SSD1306_WHITE);
