@@ -22,9 +22,6 @@ const int kDigitalInputPin2 = GPIO_NUM_25;
 const int kDigitalInputPin3 = GPIO_NUM_27;
 const int kDigitalInputPin4 = GPIO_NUM_26;
 
-
-
-
 }  // namespace sensesp
 
 #endif /* HALMET_SRC_HALMET_CONST_H_ */

@@ -8,8 +8,7 @@ class ExpiringValue {
       : value_{},
         expiration_duration_{1000},
         last_update_{0},
-        expired_value_{-1}
-      {}
+        expired_value_{-1} {}
 
   ExpiringValue(T value, unsigned long expiration_duration, T expired_value)
       : value_{value},

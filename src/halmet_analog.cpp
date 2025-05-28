@@ -1,5 +1,6 @@
 #include "halmet_analog.h"
 
+#include "halmet_string_utils.h"
 #include "sensesp/sensors/sensor.h"
 #include "sensesp/signalk/signalk_output.h"
 #include "sensesp/system/valueproducer.h"
@@ -14,6 +15,14 @@ const float kMeasurementCurrent = 0.01;
 
 // Default fuel tank size, in m3
 const float kTankDefaultSize = 120. / 1000;
+
+// Default values for the tank level curve interpolator
+const float kDefaultTankSenderEmptyOhms = 0.0f;
+const float kDefaultTankSenderFullOhms = 180.0f;
+const float kDefaultTankSenderMaxOhms =
+    1000.0f;  // Represents a sensor saturation or upper limit
+const float kDefaultTankLevelMinRatio = 0.0f;   // 0% full
+const float kDefaultTankLevelFullRatio = 1.0f;  // 100% full
 
 sensesp::FloatProducer* ConnectTankSender(Adafruit_ADS1115* ads1115,
                                           int channel, const String& name,
@@ -31,34 +40,27 @@ sensesp::FloatProducer* ConnectTankSender(Adafruit_ADS1115* ads1115,
       });
 
   if (enable_signalk_output) {
-    char resistance_sk_config_path[80];
-    snprintf(resistance_sk_config_path, sizeof(resistance_sk_config_path),
-             "/Tanks/%s/Resistance/SK Path", name.c_str());
-    char resistance_title[80];
-    snprintf(resistance_title, sizeof(resistance_title),
-             "%s Tank Sender Resistance SK Path", name.c_str());
-    char resistance_description[80];
-    snprintf(resistance_description, sizeof(resistance_description),
-             "Signal K path for the sender resistance of the %s tank",
-             name.c_str());
-    char resistance_sk_path[80];
-    snprintf(resistance_sk_path, sizeof(resistance_sk_path),
-             "tanks.%s.senderResistance", sk_id.c_str());
-    char resistance_meta_display_name[80];
-    snprintf(resistance_meta_display_name, sizeof(resistance_meta_display_name),
-             "Resistance %s", name.c_str());
-    char resistance_meta_description[80];
-    snprintf(resistance_meta_description, sizeof(resistance_meta_description),
-             "Measured tank %s sender resistance", name.c_str());
+    String resistance_sk_config_path =
+        halmet::getConfigPath("Tanks", name, "Resistance/SK Path");
+    String resistance_title =
+        halmet::getTitle("Tank", name, "Sender Resistance SK Path");
+    String resistance_description = halmet::getDescription(
+        "Signal K path for the sender resistance of the", name, "tank");
+    String resistance_sk_path =
+        halmet::getSkPath("tanks", sk_id, "senderResistance");
+    String resistance_meta_display_name =
+        halmet::getMetaDisplayName("Resistance", name, "");
+    String resistance_meta_description =
+        halmet::getMetaDescription("Measured tank", name, "sender resistance");
 
     auto sender_resistance_sk_output = new sensesp::SKOutputFloat(
-        resistance_sk_path, resistance_sk_config_path,
-        new sensesp::SKMetadata("ohm", resistance_meta_display_name,
-                                resistance_meta_description));
+        resistance_sk_path, resistance_sk_config_path.c_str(),
+        new sensesp::SKMetadata("ohm", resistance_meta_display_name.c_str(),
+                                resistance_meta_description.c_str()));
 
     ConfigItem(sender_resistance_sk_output)
-        ->set_title(resistance_title)
-        ->set_description(resistance_description)
+        ->set_title(resistance_title.c_str())
+        ->set_description(resistance_description.c_str())
         ->set_sort_order(sort_order);
 
     sender_resistance->connect_to(sender_resistance_sk_output);
@@ -66,63 +68,56 @@ sensesp::FloatProducer* ConnectTankSender(Adafruit_ADS1115* ads1115,
 
   // Configure the piecewise linear interpolator for the tank level (ratio)
 
-  char curve_config_path[80];
-  snprintf(curve_config_path, sizeof(curve_config_path),
-           "/Tanks/%s/Level Curve", name.c_str());
-  char curve_title[80];
-  snprintf(curve_title, sizeof(curve_title), "%s Tank Level Curve",
-           name.c_str());
-  char curve_description[80];
-  snprintf(curve_description, sizeof(curve_description),
-           "Piecewise linear curve for the %s tank level", name.c_str());
+  String curve_config_path =
+      halmet::getConfigPath("Tanks", name, "Level Curve");
+  String curve_title = halmet::getTitle("Tank", name, "Level Curve");
+  String curve_description = halmet::getDescription(
+      "Piecewise linear curve for the", name, "tank level");
 
-  auto tank_level = (new sensesp::CurveInterpolator(nullptr, curve_config_path))
-                        ->set_input_title("Sender Resistance (ohms)")
-                        ->set_output_title("Fuel Level (ratio)");
+  auto tank_level =
+      (new sensesp::CurveInterpolator(nullptr, curve_config_path.c_str()))
+          ->set_input_title("Sender Resistance (ohms)")
+          ->set_output_title("Fuel Level (ratio)");
 
   ConfigItem(tank_level)
-      ->set_title(curve_title)
-      ->set_description(curve_description)
+      ->set_title(curve_title.c_str())
+      ->set_description(curve_description.c_str())
       ->set_sort_order(sort_order + 1);
 
   if (tank_level->get_samples().empty()) {
     // If there's no prior configuration, provide a default curve
     tank_level->clear_samples();
-    tank_level->add_sample(sensesp::CurveInterpolator::Sample(0, 0));
-    tank_level->add_sample(sensesp::CurveInterpolator::Sample(180., 1));
-    tank_level->add_sample(sensesp::CurveInterpolator::Sample(1000., 1));
+    tank_level->add_sample(sensesp::CurveInterpolator::Sample(
+        kDefaultTankSenderEmptyOhms, kDefaultTankLevelMinRatio));
+    tank_level->add_sample(sensesp::CurveInterpolator::Sample(
+        kDefaultTankSenderFullOhms, kDefaultTankLevelFullRatio));
+    tank_level->add_sample(sensesp::CurveInterpolator::Sample(
+        kDefaultTankSenderMaxOhms,
+        kDefaultTankLevelFullRatio));  // Assuming max ohms still means full
   }
 
   sender_resistance->connect_to(tank_level);
 
   if (enable_signalk_output) {
-    char level_config_path[80];
-    snprintf(level_config_path, sizeof(level_config_path),
-             "/Tanks/%s/Current Level SK Path", name.c_str());
-    char level_title[80];
-    snprintf(level_title, sizeof(level_title), "%s Tank Level SK Path",
-             name.c_str());
-    char level_description[80];
-    snprintf(level_description, sizeof(level_description),
-             "Signal K path for the %s tank level", name.c_str());
-    char level_sk_path[80];
-    snprintf(level_sk_path, sizeof(level_sk_path), "tanks.%s.currentLevel",
-             sk_id.c_str());
-    char level_meta_display_name[80];
-    snprintf(level_meta_display_name, sizeof(level_meta_display_name),
-             "Tank %s level", name.c_str());
-    char level_meta_description[80];
-    snprintf(level_meta_description, sizeof(level_meta_description),
-             "Tank %s level", name.c_str());
+    String level_config_path =
+        halmet::getConfigPath("Tanks", name, "Current Level SK Path");
+    String level_title = halmet::getTitle("Tank", name, "Level SK Path");
+    String level_description =
+        halmet::getDescription("Signal K path for the", name, "tank level");
+    String level_sk_path = halmet::getSkPath("tanks", sk_id, "currentLevel");
+    String level_meta_display_name =
+        halmet::getMetaDisplayName("Tank", name, "level");
+    String level_meta_description =
+        halmet::getMetaDescription("Tank", name, "level");
 
     auto tank_level_sk_output = new sensesp::SKOutputFloat(
-        level_sk_path, level_config_path,
-        new sensesp::SKMetadata("ratio", level_meta_display_name,
-                                level_meta_description));
+        level_sk_path, level_config_path.c_str(),
+        new sensesp::SKMetadata("ratio", level_meta_display_name.c_str(),
+                                level_meta_description.c_str()));
 
     ConfigItem(tank_level_sk_output)
-        ->set_title(level_title)
-        ->set_description(level_description)
+        ->set_title(level_title.c_str())
+        ->set_description(level_description.c_str())
         ->set_sort_order(sort_order + 2);
 
     tank_level->connect_to(tank_level_sk_output);
@@ -130,53 +125,41 @@ sensesp::FloatProducer* ConnectTankSender(Adafruit_ADS1115* ads1115,
 
   // Configure the linear transform for the tank volume
 
-  char volume_config_path[80];
-  snprintf(volume_config_path, sizeof(volume_config_path),
-           "/Tanks/%s/Total Volume", name.c_str());
-  char volume_title[80];
-  snprintf(volume_title, sizeof(volume_title), "%s Tank Total Volume",
-           name.c_str());
-  char volume_description[80];
-  snprintf(volume_description, sizeof(volume_description),
-           "Calculated total volume of the %s tank", name.c_str());
+  String volume_config_path =
+      halmet::getConfigPath("Tanks", name, "Total Volume");
+  String volume_title = halmet::getTitle("Tank", name, "Total Volume");
+  String volume_description =
+      halmet::getDescription("Calculated total volume of the", name, "tank");
   auto tank_volume =
-      new sensesp::Linear(kTankDefaultSize, 0, volume_config_path);
+      new sensesp::Linear(kTankDefaultSize, 0, volume_config_path.c_str());
 
   ConfigItem(tank_volume)
-      ->set_title(volume_title)
-      ->set_description(volume_description)
+      ->set_title(volume_title.c_str())
+      ->set_description(volume_description.c_str())
       ->set_sort_order(sort_order + 3);
 
   tank_level->connect_to(tank_volume);
 
   if (enable_signalk_output) {
-    char volume_sk_config_path[80];
-    snprintf(volume_sk_config_path, sizeof(volume_sk_config_path),
-             "/Tanks/%s/Current Volume SK Path", name.c_str());
-    char volume_title[80];
-    snprintf(volume_title, sizeof(volume_title), "%s Tank Volume SK Path",
-             name.c_str());
-    char volume_description[80];
-    snprintf(volume_description, sizeof(volume_description),
-             "Signal K path for the %s tank volume", name.c_str());
-    char volume_sk_path[80];
-    snprintf(volume_sk_path, sizeof(volume_sk_path), "tanks.%s.currentVolume",
-             sk_id.c_str());
-    char volume_meta_display_name[80];
-    snprintf(volume_meta_display_name, sizeof(volume_meta_display_name),
-             "Tank %s volume", name.c_str());
-    char volume_meta_description[80];
-    snprintf(volume_meta_description, sizeof(volume_meta_description),
-             "Calculated tank %s remaining volume", name.c_str());
+    String volume_sk_config_path =
+        halmet::getConfigPath("Tanks", name, "Current Volume SK Path");
+    String volume_title_sk = halmet::getTitle("Tank", name, "Volume SK Path");
+    String volume_description_sk =
+        halmet::getDescription("Signal K path for the", name, "tank volume");
+    String volume_sk_path = halmet::getSkPath("tanks", sk_id, "currentVolume");
+    String volume_meta_display_name =
+        halmet::getMetaDisplayName("Tank", name, "volume");
+    String volume_meta_description =
+        halmet::getMetaDescription("Calculated tank", name, "remaining volume");
 
     auto tank_volume_sk_output = new sensesp::SKOutputFloat(
-        volume_sk_path, volume_sk_config_path,
-        new sensesp::SKMetadata("m3", volume_meta_display_name,
-                                volume_meta_description));
+        volume_sk_path, volume_sk_config_path.c_str(),
+        new sensesp::SKMetadata("m3", volume_meta_display_name.c_str(),
+                                volume_meta_description.c_str()));
 
     ConfigItem(tank_volume_sk_output)
-        ->set_title(volume_title)
-        ->set_description(volume_description)
+        ->set_title(volume_title_sk.c_str())
+        ->set_description(volume_description_sk.c_str())
         ->set_sort_order(sort_order + 4);
 
     tank_volume->connect_to(tank_volume_sk_output);

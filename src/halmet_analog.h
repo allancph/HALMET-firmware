@@ -83,7 +83,7 @@ inline const String ConfigSchema(const ADS1115VoltageInput& obj) {
 }
 
 inline const bool ConfigRequiresRestart(const ADS1115VoltageInput& obj) {
-  return true;
+  return false;
 }
 
 }  // namespace halmet

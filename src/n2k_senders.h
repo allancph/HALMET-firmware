@@ -17,14 +17,16 @@ namespace halmet {
  */
 class N2kEngineParameterRapidSender : public sensesp::FileSystemSaveable {
  public:
+  static const uint32_t kDefaultRepeatIntervalMs = 100;  // NMEA 2000 standard
+  static const uint32_t kDefaultExpiryMs = 1000;
+
   N2kEngineParameterRapidSender(String config_path, uint8_t engine_instance,
                                 tNMEA2000* nmea2000)
       : sensesp::FileSystemSaveable{config_path},
         engine_instance_{engine_instance},
         nmea2000_{nmea2000},
-        repeat_interval_{100},  // In ms. Dictated by NMEA 2000 standard!
-        expiry_{1000}           // In ms. When the inputs expire.
-  {
+        repeat_interval_{kDefaultRepeatIntervalMs},
+        expiry_{kDefaultExpiryMs} {
     this->initialize_members(repeat_interval_, expiry_);
     sensesp::event_loop()->onRepeat(repeat_interval_, [this]() {
       tN2kMsg N2kMsg;
@@ -96,14 +98,16 @@ const String ConfigSchema(const N2kEngineParameterRapidSender& obj) {
  */
 class N2kEngineParameterDynamicSender : public sensesp::FileSystemSaveable {
  public:
+  static const uint32_t kDefaultRepeatIntervalMs = 500;  // NMEA 2000 standard
+  static const uint32_t kDefaultExpiryMs = 5000;
+
   N2kEngineParameterDynamicSender(String config_path, uint8_t engine_instance,
                                   tNMEA2000* nmea2000)
       : sensesp::FileSystemSaveable{config_path},
         engine_instance_{engine_instance},
         nmea2000_{nmea2000},
-        repeat_interval_{500},  // In ms. Dictated by NMEA 2000 standard!
-        expiry_{5000}           // In ms. When the inputs expire.
-  {
+        repeat_interval_{kDefaultRepeatIntervalMs},
+        expiry_{kDefaultExpiryMs} {
     this->initialize_members(repeat_interval_, expiry_);
 
     sensesp::event_loop()->onRepeat(repeat_interval_, [this]() {
@@ -315,6 +319,9 @@ const String ConfigSchema(const N2kEngineParameterDynamicSender& obj) {
  */
 class N2kFluidLevelSender : public sensesp::FileSystemSaveable {
  public:
+  static const uint32_t kDefaultRepeatIntervalMs = 2500;  // NMEA 2000 standard
+  static const uint32_t kDefaultExpiryMs = 10000;
+
   N2kFluidLevelSender(String config_path, uint8_t tank_instance,
                       tN2kFluidType tank_type, double tank_capacity,
                       tNMEA2000* nmea2000)
@@ -323,9 +330,8 @@ class N2kFluidLevelSender : public sensesp::FileSystemSaveable {
         tank_type_{tank_type},
         tank_capacity_{tank_capacity},
         nmea2000_{nmea2000},
-        repeat_interval_{2500},  // In ms. Dictated by NMEA 2000 standard!
-        expiry_{10000}           // In ms. When the inputs expire.
-  {
+        repeat_interval_{kDefaultRepeatIntervalMs},
+        expiry_{kDefaultExpiryMs} {
     tank_level_
         .connect_to(new sensesp::LambdaTransform<double, double>(
             [this](double value) { return 100 * value; }))

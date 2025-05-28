@@ -9,3 +9,5 @@ in the development cycle.
 
 More information about PlatformIO Unit Testing:
 - https://docs.platformio.org/page/plus/unit-testing.html
+
+This project currently lacks automated unit tests. Adding unit tests for individual components (e.g., sensor processing, transforms, NMEA 2000 message construction) is highly recommended to improve code quality, ensure correctness, and facilitate future development and refactoring.
