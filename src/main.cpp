@@ -393,7 +393,7 @@ void setup() {
   // EDIT: This example connects the D2 alarm input to the low oil pressure
   // warning. Modify according to your needs.
   N2kEngineParameterDynamicSender* engine_dynamic_sender = nullptr;
-#ifdef ENABLE_NMEA2000_OUTPUT
+// Removed redundant inner #ifdef ENABLE_NMEA2000_OUTPUT
   engine_dynamic_sender = new N2kEngineParameterDynamicSender(
       "/NMEA 2000/Engine 1 Dynamic", 0, nmea2000);
 
@@ -414,9 +414,9 @@ void setup() {
     // The current coolant_temperature_celsius is actually outputting raw
     // voltage.
     coolant_temperature_celsius->connect_to(
-        &(engine_dynamic_sender->temperature_));
+        engine_dynamic_sender->temperature_); // Pass shared_ptr directly
   }
-#endif  // ENABLE_NMEA2000_OUTPUT
+#endif // ENABLE_NMEA2000_OUTPUT for engine_dynamic_sender block related to alarms and coolant temp
 
   // FIXME: Transmit the alarms over SK as well.
 
@@ -452,7 +452,7 @@ void setup() {
 
   // Connect the tacho senders. Engine name is "main".
   // EDIT: More tacho inputs can be defined by duplicating the line below.
-  auto tacho_d1_frequency = ConnectTachoSender(kDigitalInputPin1, "main");
+  Frequency* tacho_d1_frequency = ConnectTachoSender(kDigitalInputPin1, "main");
 
   ///////////////////////////////////////////////////////////////////
   // Fuel Flow Sensing (Digital Input D4 / kDigitalInputPin4)
@@ -512,9 +512,9 @@ void setup() {
 
   if (engine_dynamic_sender != nullptr) {
     // FIXME: Verify NMEA2000 fuel_rate_ unit. Assuming L/h for PGN 127489.
-    fuel_flow_rate_Lh->connect_to(&(engine_dynamic_sender->fuel_rate_));
+    fuel_flow_rate_Lh->connect_to(engine_dynamic_sender->fuel_rate_); // Pass shared_ptr directly
   }
-#endif
+#endif // This #endif is for the NMEA2000 block for fuel_flow_rate_Lh
 
 #ifdef ENABLE_SIGNALK
   fuel_flow_rate_m3s->connect_to(

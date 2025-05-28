@@ -16,7 +16,7 @@ const float kDefaultFrequencyScale = 1 / 100.;
 // Update period for tacho counter in milliseconds
 const int kTachoUpdatePeriodMs = 500;
 
-FloatProducer* ConnectTachoSender(int pin, String name) {
+Frequency* ConnectTachoSender(int pin, String name) {
   String config_path_pin = halmet::getConfigPath("Tacho", name, "Pin");
   String title_pin = halmet::getTitle("Tacho", name, "Pin");
   String description_pin = halmet::getDescription("Tacho", name, "Input Pin");
