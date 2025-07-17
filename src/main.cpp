@@ -8,6 +8,10 @@
 // Remove the parts that are not relevant to you, and add your own code
 // for external hardware libraries.
 
+#define ENABLE_NMEA2000_OUTPUT
+#define ENABLE_SIGNALK
+
+
 #include <Adafruit_ADS1X15.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
@@ -222,7 +226,7 @@ void setup() {
   // in the web UI as well.
   // EDIT: Make sure this matches your tank configuration above.
   N2kFluidLevelSender* tank_a1_sender = new N2kFluidLevelSender(
-      "/Tanks/Fuel/NMEA 2000", 0, N2kft_Fuel, 200, nmea2000);
+      "/Tanks/Fuel/NMEA 2000", 0, N2kft_Fuel, 130, nmea2000);
 
   ConfigItem(tank_a1_sender)
       ->set_title("Tank A1 NMEA 2000")
