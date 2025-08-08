@@ -11,10 +11,7 @@
 #include <Adafruit_ADS1X15.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-
-#ifdef ENABLE_NMEA2000_OUTPUT
 #include <NMEA2000_esp32.h>
-#endif
 
 #include "n2k_senders.h"
 #include "sensesp/net/discovery.h"
@@ -27,13 +24,8 @@
 #include "sensesp/transforms/lambda_transform.h"
 #include "sensesp/transforms/linear.h"
 #include "sensesp/ui/config_item.h"
-
-#ifdef ENABLE_SIGNALK
 #include "sensesp_app_builder.h"
 #define BUILDER_CLASS SensESPAppBuilder
-#else
-#include "sensesp_minimal_app_builder.h"
-#endif
 
 #include "halmet_analog.h"
 #include "halmet_const.h"
@@ -46,23 +38,12 @@
 using namespace sensesp;
 using namespace halmet;
 
-#ifndef ENABLE_SIGNALK
-#define BUILDER_CLASS SensESPMinimalAppBuilder
-std::shared_ptr<SensESPMinimalApp> sensesp_app;
-std::shared_ptr<Networking> networking;
-std::shared_ptr<MDNSDiscovery> mdns_discovery;
-std::shared_ptr<HTTPServer> http_server;
-std::shared_ptr<SystemStatusLed> system_status_led;
-#endif
-
 /////////////////////////////////////////////////////////////////////
 // Declare some global variables required for the firmware operation.
 
-#ifdef ENABLE_NMEA2000_OUTPUT
 tNMEA2000* nmea2000;
 elapsedMillis n2k_time_since_rx = 0;
 elapsedMillis n2k_time_since_tx = 0;
-#endif
 
 TwoWire* i2c;
 Adafruit_SSD1306* display;
@@ -143,7 +124,6 @@ void setup() {
   ledcWrite(0, 4096);
 #endif
 
-#ifdef ENABLE_NMEA2000_OUTPUT
   /////////////////////////////////////////////////////////////////////
   // Initialize NMEA 2000 functionality
 
@@ -186,16 +166,6 @@ void setup() {
 
   // No need to parse the messages at every single loop iteration; 1 ms will do
   event_loop()->onRepeat(1, []() { nmea2000->ParseMessages(); });
-#endif  // ENABLE_NMEA2000_OUTPUT
-
-#ifndef ENABLE_SIGNALK
-  // Initialize components that would normally be present in SensESPApp
-  networking = std::make_shared<Networking>("/System/WiFi Settings", "", "");
-  ConfigItem(networking);
-  mdns_discovery = std::make_shared<MDNSDiscovery>();
-  http_server = std::make_shared<HTTPServer>();
-  system_status_led = std::make_shared<SystemStatusLed>(LED_BUILTIN);
-#endif
 
   // Initialize the OLED display
   bool display_present = InitializeSSD1306(sensesp_app->get(), &display, i2c);
@@ -203,11 +173,7 @@ void setup() {
   ///////////////////////////////////////////////////////////////////
   // Analog inputs
 
-#ifdef ENABLE_SIGNALK
   bool enable_signalk_output = true;
-#else
-  bool enable_signalk_output = false;
-#endif
 
   // Connect the tank senders.
   // EDIT: To enable more tanks, uncomment the lines below.
@@ -256,15 +222,13 @@ void setup() {
   // auto a2_distance = new Linear(0.17, 0.0);
   // a2_voltage->connect_to(a2_distance);
 
-#ifdef ENABLE_SIGNALK
   a2_voltage->connect_to(
       new SKOutputFloat("sensors.a2.voltage", "Analog Voltage A2",
-                        new SKMetadata("V","Analog Voltage A2")));
+                        new SKMetadata("V", "Analog Voltage A2")));
   // Example of how to output the distance value to Signal K.
   // a2_distance->connect_to(
   //     new SKOutputFloat("sensors.a2.distance", "Analog Distance A2",
   //                       new SKMetadata("m", "Analog Distance A2")));
-#endif
 
   ///////////////////////////////////////////////////////////////////
   // Digital alarm inputs
@@ -287,7 +251,6 @@ void setup() {
   // alarm_d4_input->connect_to(
   //     new LambdaConsumer<bool>([](bool value) { alarm_states[3] = value; }));
 
-#ifdef ENABLE_NMEA2000_OUTPUT
   // EDIT: This example connects the D2 alarm input to the low oil pressure
   // warning. Modify according to your needs.
   N2kEngineParameterDynamicSender* engine_dynamic_sender =
@@ -304,7 +267,6 @@ void setup() {
   // This is just an example -- normally temperature alarms would not be
   // active-low (inverted).
   alarm_d3_inverted->connect_to(engine_dynamic_sender->over_temperature_);
-#endif  // ENABLE_NMEA2000_OUTPUT
 
   // FIXME: Transmit the alarms over SK as well.
 
@@ -315,7 +277,6 @@ void setup() {
   // EDIT: More tacho inputs can be defined by duplicating the line below.
   auto tacho_d1_frequency = ConnectTachoSender(kDigitalInputPin1, "main");
 
-#ifdef ENABLE_NMEA2000_OUTPUT
   // Connect outputs to the N2k senders.
   // EDIT: Make sure this matches your tacho configuration above.
   //       Duplicate the lines below to connect more tachos, but be sure to
@@ -331,8 +292,6 @@ void setup() {
 
   tacho_d1_frequency->connect_to(&(engine_rapid_sender->engine_speed_));
 
-#endif  // ENABLE_NMEA2000_OUTPUT
-
   if (display_present) {
     tacho_d1_frequency->connect_to(new LambdaConsumer<float>(
         [](float value) { PrintValue(display, 3, "RPM D1", 60 * value); }));
@@ -343,11 +302,9 @@ void setup() {
 
   // Connect the outputs to the display
   if (display_present) {
-#ifdef ENABLE_SIGNALK
     event_loop()->onRepeat(1000, []() {
       PrintValue(display, 1, "IP:", WiFi.localIP().toString());
     });
-#endif
 
     // Create a poor man's "christmas tree" display for the alarms
     event_loop()->onRepeat(1000, []() {
